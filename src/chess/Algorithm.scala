@@ -4,8 +4,8 @@ import Domain._
 
 object Algorithm {
   
-  def apply(m: Int, n: Int, pcs: List[Int]): List[Map[Square, Piece]] =
-    search(Board(m, n), PieceSet(pcs), Some(0, 0))
+  def apply(problem: Problem): List[Map[Square, Piece]] =
+    search(problem.board, problem.pieceSet, Some(0, 0))
 
   def search(board: Board, pieceSet: PieceSet, currSq: Option[Square])
   : List[Map[Square, Piece]] = {

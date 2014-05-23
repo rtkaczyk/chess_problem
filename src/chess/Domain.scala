@@ -2,6 +2,13 @@ package chess
 
 object Domain {
   
+  case class Problem(m: Int, n: Int, kings: Int = 0, queens: Int = 0,
+      bishops: Int = 0, rooks: Int = 0, knights: Int = 0) {
+    
+    def board = Board(m, n)
+    def pieceSet = PieceSet(kings :: queens :: bishops :: rooks :: knights :: Nil)
+  }
+  
   case class Square(f: Int, r: Int) {
     def + (relative: Square) = Square(f + relative.f, r + relative.r)
     
@@ -40,6 +47,8 @@ object Domain {
       else
         Some(Board(files, ranks, pieces + (sq -> p), threatened ++ moves))
     }
+    
+    def left: Int = files * ranks - (pieces.size + threatened.size)
   }
       
   case class PieceSet(pieces: List[Int]) {
