@@ -48,7 +48,9 @@ object Domain {
         Some(Board(files, ranks, pieces + (sq -> p), threatened ++ moves))
     }
     
-    def left: Int = files * ranks - (pieces.size + threatened.size)
+    def safe: Int = files * ranks - (threatened.size + pieces.size)
+    
+    def remaining(sq: Square) = (files - sq.f) * ranks - sq.r 
   }
       
   case class PieceSet(pieces: List[Int]) {
@@ -62,9 +64,9 @@ object Domain {
       pcs.flatten
     }
     
-    def size = pieces.sum
+    val size = pieces.sum
     
-    def isEmpty = size == 0
+    val isEmpty = size == 0
     
     def - (p: Piece): PieceSet = {
       val i = choice.indexOf(p)
@@ -79,27 +81,21 @@ object Domain {
   
   case object Rook extends Piece {
     def apply(b: Board)(sq: Square) = {
-      val horz = for (f <- 0 to b.files) yield Square(f, sq.r)
-      val vert = for (r <- 0 to b.ranks) yield Square(sq.f, r)
+      val horz = for (f <- 0 until b.files) yield Square(f, sq.r)
+      val vert = for (r <- 0 until b.ranks) yield Square(sq.f, r)
       
       (horz ++ vert).toSet - sq
     }
   }
   
   case object Bishop extends Piece {
-    def apply(b: Board)(sq: Square) = {
-      import math.min
+    val dirs = Set[Square]((1, 1), (1, -1), (-1, -1), (-1, 1))
 
-      val right = 
-        for (d <- -min(sq.f, sq.r) to min(b.files - sq.f, b.ranks - sq.r)) 
-          yield sq + (d, d)
-      
-      val left = 
-        for (d <- -min(b.files - sq.f, sq.r) to min(sq.f, b.ranks - sq.r))
-          yield sq + (-d, d)
-          
-      (right ++ left).toSet - sq
-    }
+    def apply(b: Board)(sq: Square) =
+      for {
+        d <- dirs 
+        m <- Iterator.iterate(sq)(_ + d) drop 1 takeWhile b.inside 
+      } yield m
   }
   
   case object Queen extends Piece {
@@ -108,16 +104,16 @@ object Domain {
   }
   
   case object King extends Piece {
-    val moves = List[Square]((1, 0), (1, 1), (0, 1), (-1, 1))
+    val moves = Set[Square]((1, 0), (1, 1), (0, 1), (-1, 1))
     
     def apply(b: Board)(sq: Square) = 
-      (moves.map(sq.+) ++ moves.map(sq.-)).toSet filter b.inside
+      (moves.map(sq.+) ++ moves.map(sq.-)) filter b.inside
   }
   
   case object Knight extends Piece {
-    val moves = List[Square]((2, 1), (1, 2), (-1, 2), (-2, 1))
+    val moves = Set[Square]((2, 1), (1, 2), (-1, 2), (-2, 1))
     
     def apply(b: Board)(sq: Square) = 
-      (moves.map(sq.+) ++ moves.map(sq.-)).toSet filter b.inside
+      (moves.map(sq.+) ++ moves.map(sq.-)) filter b.inside
   }
 }

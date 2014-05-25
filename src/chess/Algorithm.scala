@@ -4,7 +4,7 @@ import Domain._
 
 object Algorithm {
   
-  def apply(problem: Problem): List[Map[Square, Piece]] =
+  def apply(problem: Problem): List[Map[Square, Piece]] = 
     search(problem.board, problem.pieceSet, Some(0, 0))
 
   def search(board: Board, pieceSet: PieceSet, currSq: Option[Square])
@@ -13,7 +13,8 @@ object Algorithm {
     if (pieceSet.isEmpty)
       board.pieces :: Nil
     
-    else if (currSq.isEmpty)
+    else if (currSq.isEmpty || board.safe < pieceSet.size || 
+        board.remaining(currSq.get) < pieceSet.size)
       Nil
     
     else {
