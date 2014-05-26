@@ -1,6 +1,6 @@
-package chess
+package chess.recursive
 
-import Domain._
+import chess.common.Domain._
 
 object Algorithm {
   

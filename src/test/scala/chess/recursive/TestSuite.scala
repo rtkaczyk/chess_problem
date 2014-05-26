@@ -1,7 +1,8 @@
 package chess
 
 import org.scalatest._
-import Domain._
+import chess.common.Domain._
+import chess.recursive.Algorithm
 
 class TestSuite extends FunSuite {
   
@@ -21,8 +22,8 @@ class TestSuite extends FunSuite {
     Problem(4, 4, queens = 1, knights = 2) -> 40,
     Problem(6, 6, queens = 6) -> 4,
     Problem(7, 7, queens = 7) -> 40,
-    Problem(8, 8, queens = 8) -> 92,
-    Problem(9, 9, queens = 9) -> 352/*,
+    Problem(8, 8, queens = 8) -> 92/*,
+    Problem(9, 9, queens = 9) -> 352,
     Problem(8, 8, queens = 5, knights = 5) -> 16,
     Problem(7, 7, kings = 2, queens = 2, bishops = 2, knights = 1) -> 3858080*/
   )
