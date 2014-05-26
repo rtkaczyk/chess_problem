@@ -1,2 +1,4 @@
 #!/bin/bash
-java -cp target/chess.jar chess.$1.Chess
+method=$1
+shift
+java -cp target/chess.jar $@ chess.$method.Chess

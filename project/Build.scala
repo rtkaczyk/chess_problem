@@ -5,7 +5,7 @@ import AssemblyKeys._
 
 object ChessBuild extends Build {
   lazy val root = Project(id = "root", base = file("."), settings = projectSettings)
-      .settings(libraryDependencies ++= Seq(scalaTest, akkaActor))
+      .settings(libraryDependencies ++= Seq(scalaTest, akkaActor, akkaRemote))
   
   val projectSettings = Project.defaultSettings ++ assemblySettings ++ 
     Seq(

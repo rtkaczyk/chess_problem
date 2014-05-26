@@ -10,7 +10,7 @@ object IO {
     Problem(files, ranks, k, q, b, r, n)
   }
   
-  def output(solutions: List[Map[Square, Piece]]) {
+  def output(solutions: Traversable[Map[Square, Piece]]) {
     solutions foreach { s =>
       println(s.toSeq.map{ case (sq, p) => p.notation + sq.notation }
         .mkString(" "))
