@@ -1,12 +1,21 @@
 package chess
 
+import language.implicitConversions
+
 object Domain {
   
   case class Problem(m: Int, n: Int, kings: Int = 0, queens: Int = 0,
       bishops: Int = 0, rooks: Int = 0, knights: Int = 0) {
     
     def board = Board(m, n)
+    
     def pieceSet = PieceSet(kings :: queens :: bishops :: rooks :: knights :: Nil)
+    
+    override def toString = {
+      val pieces = (pieceSet.pieces zip pieceSet.choice).filter(_._1 > 0)
+        .map{case (n, p) => s"$n${p.notation}"}.mkString(", ")
+      s"${m}x$n: $pieces"
+    }
   }
   
   case class Square(f: Int, r: Int) {
@@ -14,7 +23,7 @@ object Domain {
     
     def - (relative: Square) = Square(f + relative.f, r - relative.r)
     
-    def notation: String = ('a' to 'z')(f).toString + r 
+    def notation: String = ('a' to 'z')(f).toString + (r + 1) 
     
     def tuple = (f, r)
   }
@@ -77,6 +86,7 @@ object Domain {
   
   sealed trait Piece {
     def apply(b: Board)(sq: Square): Set[Square]
+    def notation: String
   }
   
   case object Rook extends Piece {
@@ -86,6 +96,8 @@ object Domain {
       
       (horz ++ vert).toSet - sq
     }
+    
+    def notation = "R"
   }
   
   case object Bishop extends Piece {
@@ -96,11 +108,15 @@ object Domain {
         d <- dirs 
         m <- Iterator.iterate(sq)(_ + d) drop 1 takeWhile b.inside 
       } yield m
+      
+    def notation = "B"
   }
   
   case object Queen extends Piece {
     def apply(b: Board)(sq: Square) = 
       Rook(b)(sq) ++ Bishop(b)(sq)
+      
+    def notation = "Q"
   }
   
   case object King extends Piece {
@@ -108,6 +124,8 @@ object Domain {
     
     def apply(b: Board)(sq: Square) = 
       (moves.map(sq.+) ++ moves.map(sq.-)) filter b.inside
+      
+    def notation = "K"
   }
   
   case object Knight extends Piece {
@@ -115,5 +133,7 @@ object Domain {
     
     def apply(b: Board)(sq: Square) = 
       (moves.map(sq.+) ++ moves.map(sq.-)) filter b.inside
+    
+    def notation = "N"
   }
 }
