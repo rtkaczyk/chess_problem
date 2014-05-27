@@ -5,21 +5,15 @@ import chess.common.Domain._
 import collection.mutable
 import Protocol._
 
-class Cruncher(coordinator: ActorRef) extends Actor with ActorLogging {
+class Cruncher(coordinator: ActorRef) extends Actor {
   
   val stack = mutable.Stack[Frame]()
   var solutions = List[Map[Square, Piece]]()
-  
-  val optimisationFactor = System.getProperty("optimise", "1").toInt
-  var optimisationCounter = optimisationFactor 
-  
-  //val coordinator: ActorRef = context.parent
   
   def receive = idle
   
   def idle: Receive = {
     case f: Frame =>
-      //log.info("Received a frame from: %s. Crunching".format(sender().path.name))
       context become active
       stack.push(f)
       search()
@@ -28,17 +22,14 @@ class Cruncher(coordinator: ActorRef) extends Actor with ActorLogging {
   def active: Receive = {
     case Continue =>
       if (stack.nonEmpty) {
-        //log.info("Continuing")
         search()
       } else {
-        //log.info("Finishing")
         context become idle
-        coordinator ! Finished(solutions.toList)
+        coordinator ! Finished(solutions)
         solutions = Nil
       }
       
     case Share =>
-      //log.info("Received a Share request")
       if (stack.nonEmpty)
         coordinator ! stack.pop()
   }
@@ -61,13 +52,7 @@ class Cruncher(coordinator: ActorRef) extends Actor with ActorLogging {
       for (p <- pieceSet.pop; b <- board.withPiece(p, sq))
         stack.push(Frame(b, pieceSet - p, b.nextSquare(sq)))
     }
-    
-    if (optimisationCounter > 0 && stack.nonEmpty) {
-      optimisationCounter -= 1
-      search()
-    } else {
-      optimisationCounter = optimisationFactor
-      self ! Continue 
-    }
+      
+    self ! Continue 
   } 
 }

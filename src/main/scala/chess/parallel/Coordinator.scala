@@ -9,35 +9,24 @@ import scala.util.Random
 import com.typesafe.config._
 import collection.JavaConversions._
 
-class Coordinator extends Actor with ActorLogging {
+class Coordinator extends Actor {
   
-  val solutions = mutable.ListBuffer[Map[Square, Piece]]()
+  var solutions = List[Map[Square, Piece]]()
   
-  val crunchers = context.system.settings.config
-    .getObject("akka.actor.deployment").keySet().toList
-    .filter(_ startsWith "/cruncher").map(_ drop 1)
+  val crunchers: List[ActorRef] = context.system.settings.config
+    .getObject("akka.actor.deployment").keySet().toList.map(_ drop 1)
+    .map(context.system.actorOf(Props(classOf[Cruncher], self), _))
     
-  println("KURWA")
-  println(crunchers)
-  
-  val idle = mutable.Set[ActorRef](
-      (for (cr <- crunchers) 
-        yield context.system.actorOf(Props(classOf[Cruncher], self), s"$cr")): _*)
+  val idle = mutable.Set[ActorRef](crunchers: _*)
   
   val active = mutable.Set[ActorRef]()
-  
-  val stats = mutable.Map[String, Int]() withDefaultValue 0
   
   val unhandledFrames = mutable.Queue[Frame]()
   
   def receive = {
     case Finished(sols) =>
-      solutions ++= sols
-      val cruncher = sender()
-      //log.info("Finished: " + cruncher.path.name)
-      //log.info("State: " + crunchersState)
-      markIdle(cruncher)
-      stats(cruncher.path.name) = stats(cruncher.path.name) + 1 
+      solutions :::= sols
+      markIdle(sender())
       
       if (unhandledFrames.nonEmpty)
         sender() ! unhandledFrames.dequeue()
@@ -46,8 +35,6 @@ class Coordinator extends Actor with ActorLogging {
       else {
         idle foreach (_ ! PoisonPill)
         IO.output(solutions)
-        println("\nSTATS:")
-        println(stats.toList.sortBy(_._1).map(x => s"${x._1} -> ${x._2}").mkString("\n"))
         context.system.shutdown()
       }
     
@@ -56,14 +43,10 @@ class Coordinator extends Actor with ActorLogging {
         unhandledFrames.enqueue(f)
       else {
         val cruncher = selectCruncher(idle)
-        //log.info("Received a frame from: %s. Sending to: %s".format(sender().path.name, cruncher.path.name))
         cruncher ! f
         markActive(cruncher)
-        //log.info("State: " + crunchersState)
-        if (idle.nonEmpty) {
-          //log.info("Sending Share request to: " + cruncher.path.name)
+        if (idle.nonEmpty)
           cruncher ! Share
-        }
       }
   }
   
@@ -81,8 +64,4 @@ class Coordinator extends Actor with ActorLogging {
     val i = Random.nextInt(set.size)
     set.toList(i)
   }
-  
-  def crunchersState = 
-    s"Active: [${active.map(_.path.name).mkString(", ")}], " +
-    s"Idle: [${idle.map(_.path.name).mkString(", ")}] "
 }
