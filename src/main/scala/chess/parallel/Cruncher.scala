@@ -10,21 +10,15 @@ class Cruncher(coordinator: ActorRef) extends Actor {
   val stack = mutable.Stack[Frame]()
   var solutions = List[Map[Square, Piece]]()
   
-  def receive = idle
-  
-  def idle: Receive = {
+  def receive = {
     case f: Frame =>
-      context become active
       stack.push(f)
       search()
-  }
   
-  def active: Receive = {
     case Continue =>
       if (stack.nonEmpty) {
         search()
       } else {
-        context become idle
         coordinator ! Finished(solutions)
         solutions = Nil
       }
@@ -39,7 +33,7 @@ class Cruncher(coordinator: ActorRef) extends Actor {
     val Frame(board, pieceSet, currSq) = stack.pop()
     
     if (pieceSet.isEmpty)
-      solutions = board.pieces :: solutions
+      solutions ::= board.pieces
     
     else if (currSq.isEmpty || board.safe < pieceSet.size || 
         board.remaining(currSq.get) < pieceSet.size)

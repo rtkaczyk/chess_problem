@@ -5,7 +5,7 @@ import chess.common.IO
 import Protocol._
 
 object Chess extends App {
-  val system = ActorSystem("chess")
+  val system = ActorSystem(Deployment.SysName)
   val coordinator = system.actorOf(Props(classOf[Coordinator]), "coordinator")
   
   val problem = IO.input()
