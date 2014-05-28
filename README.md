@@ -51,4 +51,4 @@ This version uses plain Java threads to accomplish the task. Run with:
 $ ./run threads -Dapp.solvers=3 < main.in
 ```
 
-`app.solvers` property specifies the number of threads solving the problem. On my machine, best results were achieved using 3 threads.
+`app.solvers` property specifies the number of threads solving the problem. On my machine, best results were achieved using 3 threads (4 for bigger problems).
