@@ -27,6 +27,8 @@ If using remote deployment, run the remote (slave) application with:
 
 ```
 $ ./run remote -Dconfig.file=./conf/remote.conf
+
+
 ```
 
 Then run the master application with:
@@ -40,3 +42,13 @@ $ ./run parallel -Dconfig.file=./conf/master.conf < main.in
 ```
 $ ./run parallel < main.in
 ```
+
+#### Threads version
+
+This version uses plain Java threads to accomplish the task. Run with:
+
+```
+$ ./run threads -Dapp.solvers=3 < main.in
+```
+
+`app.solvers` property specifies the number of threads solving the problem. On my machine, best results were achieved using 3 threads.
