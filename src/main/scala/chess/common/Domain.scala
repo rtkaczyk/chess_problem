@@ -21,7 +21,7 @@ object Domain {
   case class Square(f: Int, r: Int) {
     def + (relative: Square) = Square(f + relative.f, r + relative.r)
     
-    def - (relative: Square) = Square(f + relative.f, r - relative.r)
+    def - (relative: Square) = Square(f - relative.f, r - relative.r)
     
     def notation: String = ('a' to 'z')(f).toString + (r + 1) 
     
