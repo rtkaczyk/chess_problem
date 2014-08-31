@@ -5,11 +5,11 @@ import AssemblyKeys._
 
 object ChessBuild extends Build {
   lazy val root = Project(id = "root", base = file("."), settings = projectSettings)
-      .settings(libraryDependencies ++= Seq(scalaTest, akkaActor, akkaRemote))
+      .settings(libraryDependencies ++= Seq(scalaTest, akkaActor))
   
   val projectSettings = Project.defaultSettings ++ assemblySettings ++ 
     Seq(
-      scalaVersion := "2.11.1",
+      scalaVersion := "2.11.2",
       crossPaths := false,
       testOptions in Test += Tests.Argument("-oD"),
       test in assembly := (),
@@ -19,6 +19,4 @@ object ChessBuild extends Build {
   val scalaTest = "org.scalatest" %% "scalatest" % "2.1.6" % "test"
   
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % "2.3.3"
-  
-  val akkaRemote = "com.typesafe.akka" %% "akka-remote" % "2.3.3"
 } 

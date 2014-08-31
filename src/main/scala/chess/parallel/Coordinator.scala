@@ -10,8 +10,10 @@ import scala.util.Random
 class Coordinator extends Actor {
   
   var solutions = List[Map[Square, Piece]]()
+
+  val noCrunchers = System.getProperty("chess.crunchers", "4").toInt
   
-  val idle = mutable.Set[ActorRef](Deployment(context.system, self): _*)
+  val idle = mutable.Set[ActorRef](createCrunchers(noCrunchers): _*)
   val active = mutable.Set[ActorRef]()
   
   val unhandledFrames = mutable.Queue[Frame]()
@@ -57,4 +59,8 @@ class Coordinator extends Actor {
     val i = Random.nextInt(set.size)
     set.toList(i)
   }
+
+  def createCrunchers(n: Int) =
+    for (i <- 1 to n)
+      yield context.system.actorOf(Props(classOf[Cruncher], self), s"cruncher-$i")
 }
