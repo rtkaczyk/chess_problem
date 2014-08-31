@@ -26,7 +26,7 @@ class TestSuite extends FunSuite {
     Problem(8, 8, queens = 8) -> 92/*,
     Problem(9, 9, queens = 9) -> 352,
     Problem(8, 8, queens = 5, knights = 5) -> 16,
-    Problem(7, 7, kings = 2, queens = 2, bishops = 2, knights = 1) -> 3858080*/
+    Problem(7, 7, kings = 2, queens = 2, bishops = 2, knights = 1) -> 3063828*/
   )
   
   problems foreach testProblem
