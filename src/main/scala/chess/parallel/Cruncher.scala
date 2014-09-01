@@ -43,7 +43,7 @@ class Cruncher(coordinator: ActorRef) extends Actor {
       val sq = currSq.get
       
       stack.push(Frame(board, pieceSet, board.nextSquare(sq)))
-      for (p <- pieceSet.pop; b <- board.withPiece(p, sq))
+      for (p <- pieceSet.pop; b <- board.withPiece(p, sq, p(board, sq)))
         stack.push(Frame(b, pieceSet - p, b.nextSquare(sq)))
     }
       

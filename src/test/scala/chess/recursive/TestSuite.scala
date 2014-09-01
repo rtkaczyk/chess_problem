@@ -18,6 +18,7 @@ class TestSuite extends FunSuite {
   val problems = Seq(
     Problem(2, 2, kings = 1, bishops = 1) -> 0,
     Problem(3, 3, kings = 2, rooks = 1) -> 4,
+    Problem(2, 5, rooks = 2) -> 20,
     Problem(4, 4, rooks = 2, knights = 4) -> 8,
     Problem(4, 4, bishops = 6) -> 16,
     Problem(4, 4, queens = 1, knights = 2) -> 40,

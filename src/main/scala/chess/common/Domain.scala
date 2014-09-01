@@ -7,9 +7,9 @@ object Domain {
   case class Problem(m: Int, n: Int, kings: Int = 0, queens: Int = 0,
       rooks: Int = 0, bishops: Int = 0, knights: Int = 0) {
     
-    def board = Board(m, n)
+    val board = Board(m, n)
     
-    def pieceSet = PieceSet(kings :: queens :: rooks :: bishops :: knights :: Nil)
+    val pieceSet = PieceSet(kings :: queens :: rooks :: bishops :: knights :: Nil)
   }
   
   case class Square(f: Int, r: Int) {
@@ -37,8 +37,7 @@ object Domain {
     def nextSquare(square: Square): Option[Square] = 
       sqIterator(square).find(sq => !threatened(sq))
       
-    def withPiece(p: Piece, sq: Square): Option[Board] = {
-      val moves = p(this)(sq)
+    def withPiece(p: Piece, sq: Square, moves: Set[Square]): Option[Board] = {
       val captures = moves.exists(pieces.isDefinedAt)
       
       if (captures)
@@ -75,11 +74,11 @@ object Domain {
   }
   
   sealed trait Piece {
-    def apply(b: Board)(sq: Square): Set[Square]
+    def apply(b: Board, sq: Square): Set[Square]
   }
   
   case object Rook extends Piece {
-    def apply(b: Board)(sq: Square) = {
+    def apply(b: Board, sq: Square) = {
       val horz = for (f <- 0 until b.files) yield Square(f, sq.r)
       val vert = for (r <- 0 until b.ranks) yield Square(sq.f, r)
       
@@ -90,7 +89,7 @@ object Domain {
   case object Bishop extends Piece {
     val dirs = Set[Square]((1, 1), (1, -1), (-1, -1), (-1, 1))
 
-    def apply(b: Board)(sq: Square) =
+    def apply(b: Board, sq: Square) =
       for {
         d <- dirs 
         m <- Iterator.iterate(sq)(_ + d) drop 1 takeWhile b.inside 
@@ -98,21 +97,21 @@ object Domain {
   }
   
   case object Queen extends Piece {
-    def apply(b: Board)(sq: Square) = 
-      Rook(b)(sq) ++ Bishop(b)(sq)
+    def apply(b: Board, sq: Square) =
+      Rook(b, sq) ++ Bishop(b, sq)
   }
   
   case object King extends Piece {
     val moves = Set[Square]((1, 0), (1, 1), (0, 1), (-1, 1))
     
-    def apply(b: Board)(sq: Square) = 
+    def apply(b: Board, sq: Square) =
       (moves.map(sq.+) ++ moves.map(sq.-)) filter b.inside
   }
   
   case object Knight extends Piece {
     val moves = Set[Square]((2, 1), (1, 2), (-1, 2), (-2, 1))
     
-    def apply(b: Board)(sq: Square) = 
+    def apply(b: Board, sq: Square) =
       (moves.map(sq.+) ++ moves.map(sq.-)) filter b.inside
   }
 }
