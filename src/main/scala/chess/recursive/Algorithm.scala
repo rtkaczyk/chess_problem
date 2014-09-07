@@ -1,41 +1,39 @@
 package chess.recursive
 
-import chess.common.Domain._
-
-import scala.collection.mutable
+import chess.common.Domain
+import Domain._
 
 object Algorithm {
+  def apply(domain: Domain) = {
+    new Algorithm(domain).solve
+  }
+}
 
-  val cache = mutable.Map[(Piece, Square), Set[Square]]()
-  
-  def apply(problem: Problem): List[Map[Square, Piece]] = {
-    cache.clear()
-    search(problem.board, problem.pieceSet, Some(0, 0))
+class Algorithm(domain: Domain) {
+  def solve = {
+    val Frame(b, ps, sq) = domain.initialFrame
+    search(b, ps, sq)
   }
 
   def search(board: Board, pieceSet: PieceSet, currSq: Option[Square])
   : List[Map[Square, Piece]] = {
-    
+
     if (pieceSet.isEmpty)
       board.pieces :: Nil
-    
-    else if (currSq.isEmpty || board.safe < pieceSet.size || 
-        board.remaining(currSq.get) < pieceSet.size)
+
+    else if (currSq.isEmpty || domain.remainingSafe(board, currSq.get) < pieceSet.size)
       Nil
-    
+
     else {
       val sq = currSq.get
-      
-      val skipSquare = search(board, pieceSet, board.nextSquare(sq))
+
+      val skipSquare = search(board, pieceSet, domain.nextSquare(board, sq))
       val trySquare = for {
         p <- pieceSet.pop
-        b <- board.withPiece(p, sq, moves(p, board, sq))
-      } yield search(b, pieceSet - p, b.nextSquare(sq))
-      
-      trySquare.flatten ++ skipSquare
+        b <- domain.boardWithPiece(board, p, sq)
+      } yield search(b, pieceSet - p, domain.nextSquare(b, sq))
+
+      skipSquare ::: trySquare.flatten
     }
   }
-
-  def moves(p: Piece, b: Board, sq: Square): Set[Square] =
-    cache.getOrElseUpdate((p, sq), p(b, sq))
 }

@@ -1,13 +1,11 @@
 package chess.common
 
-import Domain._
-
 object IO {
-  def input(): Problem = {
+  def input(): Domain = {
     val files :: ranks :: k :: q :: r :: b :: n :: Nil =
       io.StdIn.readLine().split("\\s+").map(_.toInt).toList
     
-    Problem(files, ranks, k, q, r , b, n)
+    Domain(files, ranks, k, q, r , b, n)
   }
   
   def output(solutions: Traversable[_]) {

@@ -2,14 +2,12 @@ package chess.parallel
 
 import akka.actor._
 import chess.common.IO
-import Protocol._
-import com.typesafe.config.ConfigFactory
+import chess.parallel.Solver.Continue
 
 object Chess extends App {
+  val domain = IO.input()
   val system = ActorSystem("chess")
-  val coordinator = system.actorOf(Props(classOf[Coordinator]), "coordinator")
-  
-  val problem = IO.input()
-  
-  coordinator ! Frame(problem.board, problem.pieceSet, Some(0, 0))
+  val solver = system.actorOf(Props(classOf[Solver], domain), "solver")
+
+  solver ! Continue(Nil, domain.initialFrame :: Nil)
 }

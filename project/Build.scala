@@ -10,6 +10,7 @@ object ChessBuild extends Build {
   val projectSettings = Project.defaultSettings ++ assemblySettings ++ 
     Seq(
       scalaVersion := "2.11.2",
+      scalacOptions ++= Seq("-unchecked", "-deprecation","-feature"),
       crossPaths := false,
       testOptions in Test += Tests.Argument("-oD"),
       test in assembly := (),
