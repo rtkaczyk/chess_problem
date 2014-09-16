@@ -61,26 +61,34 @@ object Domain {
     }
   }
 
-  case class Board(piecesPut: List[(Int, Piece)], piecesLeft: PieceSet, safeIndices: List[Int]) {
-    def withPiece(piece: Piece)(implicit dim: Dim): Option[Board] = safeIndices match {
+  type PiecesOnBoard = List[(Int, Piece)]
+
+  case class Board(piecesPut: PiecesOnBoard, piecesLeft: PieceSet, safeIndices: List[Int])(implicit dim: Dim) {
+    def withPieces: List[Board] = safeIndices match {
       case Nil =>
-        None
+        Nil
 
       case idx :: idxs =>
         val sq = idx2sq(idx)
-        val captures = piecesPut.exists(pp => piece.attacks(sq, idx2sq(pp._1)))
-        if (captures)
-          None
-        else {
-          val remainingIdxs = idxs.filter(i => !piece.attacks(sq, idx2sq(i)))
-          Some(Board((idx, piece) :: piecesPut, piecesLeft - piece, remainingIdxs))
+
+        val withPiece = piecesLeft.pop.flatMap { piece =>
+          if (piecesLeft.size > safeIndices.size)
+            Nil
+          else if (piecesPut.exists(pp => piece.attacks(sq, idx2sq(pp._1))))
+            Nil
+          else {
+            val remainingIdxs = idxs.filter(i => !piece.attacks(sq, idx2sq(i)))
+            Board((idx, piece) :: piecesPut, piecesLeft - piece, remainingIdxs) :: Nil
+          }
         }
+
+        if (idxs.isEmpty) withPiece else skipIndex :: withPiece
     }
 
-    def skipIndex: Board =
+    private def skipIndex: Board =
       this.copy(safeIndices = safeIndices.tail)
 
-    def idx2sq(idx: Int)(implicit dim: Dim): Square =
+    private def idx2sq(idx: Int): Square =
       Square(idx / dim.ranks, idx % dim.ranks)
   }
 }

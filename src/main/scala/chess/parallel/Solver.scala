@@ -14,7 +14,6 @@ object Solver {
 class Solver(val domain: Domain) extends Actor {
 
   import context.dispatcher
-  import domain.dim
   import Solver._
 
   val MaxActiveFutures = System.getProperty("max.active.futures", "4").toInt
@@ -44,18 +43,7 @@ class Solver(val domain: Domain) extends Actor {
     active += 1
     Future {
       val (solved, unsolved) = boards.partition(_.piecesLeft.isEmpty)
-      self ! Continue(solved.map(_.piecesPut), unsolved.flatMap(search))
+      self ! Continue(solved.map(_.piecesPut), unsolved.flatMap(_.withPieces))
     }
   }
-
-  def search(board: Board): List[Board] =
-    if (board.safeIndices.isEmpty)
-      Nil
-    else {
-      val trySquare =
-        for (p <- board.piecesLeft.pop; b <- board.withPiece(p))
-          yield b
-
-      board.skipIndex :: trySquare
-    }
 }
