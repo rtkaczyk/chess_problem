@@ -1,35 +1,34 @@
 package chess.parallel
 
 
-import akka.actor.{PoisonPill, Actor}
+import akka.actor.Actor
 import chess.common._
 import chess.common.Domain._
 
 import scala.concurrent.Future
 
 object Solver {
-  case class Continue(solutions: List[Map[Square, Piece]], frames: List[Frame])
-  case class Solutions(s: List[Map[Square, Piece]])
+  case class Continue(solutions: List[List[(Int, Piece)]], frames: List[Board])
 }
 
 class Solver(val domain: Domain) extends Actor {
 
   import context.dispatcher
+  import domain.dim
   import Solver._
 
-
   val MaxActiveFutures = System.getProperty("max.active.futures", "4").toInt
-  val FramesPerFuture = System.getProperty("frames.per.future", "64").toInt
+  val BoardsPerFuture = System.getProperty("boards.per.future", "64").toInt
 
-  var solutions = List[Map[Square, Piece]]()
-  var stack = List[Frame]()
-  var active = 1 //first frame will not come from a future, but I'm treating it as such
+  var solutions = List[List[(Int, Piece)]]()
+  var stack = List[Board]()
+  var active = 1
 
 
   def receive = {
-    case Continue(ss, fs) =>
+    case Continue(ss, bs) =>
       solutions :::= ss
-      stack :::= fs
+      stack :::= bs
       active -= 1
 
       if (active == 0 && stack.isEmpty) {
@@ -40,29 +39,23 @@ class Solver(val domain: Domain) extends Actor {
   }
 
   def fireFutures() = while (active < MaxActiveFutures && stack.nonEmpty) {
-    val (frames, tail) = stack.splitAt(FramesPerFuture)
+    val (boards, tail) = stack.splitAt(BoardsPerFuture)
     stack = tail
     active += 1
     Future {
-      val (solved, unsolved) = frames.partition(_.pieceSet.isEmpty)
-      self ! Continue(solved.map(_.board.pieces), unsolved.flatMap(search))
+      val (solved, unsolved) = boards.partition(_.piecesLeft.isEmpty)
+      self ! Continue(solved.map(_.piecesPut), unsolved.flatMap(search))
     }
   }
 
-  def search(frame: Frame): List[Frame] = {
-    val Frame(board, pieceSet, currSq) = frame
+  def search(board: Board): List[Board] =
+    if (board.safeIndices.isEmpty)
+      Nil
+    else {
+      val trySquare =
+        for (p <- board.piecesLeft.pop; b <- board.withPiece(p))
+          yield b
 
-    currSq.map { sq =>
-      if (domain.remainingSafe(board, sq) < pieceSet.size)
-        Nil
-      else {
-        val skipSquare = Frame(board, pieceSet, domain.nextSquare(board, sq))
-        val trySquare = for (p <- pieceSet.pop; b <- domain.boardWithPiece(board, p, sq))
-          yield Frame(b, pieceSet - p, domain.nextSquare(b, sq))
-
-        skipSquare :: trySquare
-      }
-    } getOrElse Nil
-  }
-
+      board.skipIndex :: trySquare
+    }
 }

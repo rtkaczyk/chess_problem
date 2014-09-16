@@ -3,4 +3,4 @@ method=$1
 shift
 problem=${1:-"7 7 2 2 0 2 1"}
 shift
-echo $problem | java -cp target/chess.jar $@ chess.$method.Chess
+echo $problem | java -Xms8g -Xmx8g -cp target/chess.jar $@ chess.$method.Chess

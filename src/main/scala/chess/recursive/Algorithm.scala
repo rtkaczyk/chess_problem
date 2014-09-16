@@ -1,39 +1,31 @@
 package chess.recursive
 
 import chess.common.Domain
-import Domain._
 
 object Algorithm {
   def apply(domain: Domain) = {
-    new Algorithm(domain).solve
+    new Algorithm(domain).search(domain.initialBoard)
   }
 }
 
 class Algorithm(domain: Domain) {
-  def solve = {
-    val Frame(b, ps, sq) = domain.initialFrame
-    search(b, ps, sq)
-  }
 
-  def search(board: Board, pieceSet: PieceSet, currSq: Option[Square])
-  : List[Map[Square, Piece]] = {
+  import Domain._
+  import domain.dim
 
-    if (pieceSet.isEmpty)
-      board.pieces :: Nil
-
-    else if (currSq.isEmpty || domain.remainingSafe(board, currSq.get) < pieceSet.size)
+  def search(board: Board): List[List[(Int, Piece)]] =
+    if (board.piecesLeft.isEmpty)
+      board.piecesPut :: Nil
+    else if (board.safeIndices.isEmpty)
       Nil
-
     else {
-      val sq = currSq.get
+      val skipIndex = search(board.skipIndex)
+      val tryIndex = for {
+        p <- board.piecesLeft.pop
+        b <- board.withPiece(p).toList
+        s <- search(b)
+      } yield s
 
-      val skipSquare = search(board, pieceSet, domain.nextSquare(board, sq))
-      val trySquare = for {
-        p <- pieceSet.pop
-        b <- domain.boardWithPiece(board, p, sq)
-      } yield search(b, pieceSet - p, domain.nextSquare(b, sq))
-
-      skipSquare ::: trySquare.flatten
+      skipIndex ::: tryIndex
     }
-  }
 }

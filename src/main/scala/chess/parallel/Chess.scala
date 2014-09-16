@@ -9,5 +9,5 @@ object Chess extends App {
   val system = ActorSystem("chess")
   val solver = system.actorOf(Props(classOf[Solver], domain), "solver")
 
-  solver ! Continue(Nil, domain.initialFrame :: Nil)
+  solver ! Continue(Nil, domain.initialBoard :: Nil)
 }
