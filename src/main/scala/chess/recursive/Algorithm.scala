@@ -12,11 +12,12 @@ class Algorithm(domain: Domain) {
 
   import Domain._
 
-  def search(board: Board): List[PiecesOnBoard] =
+  def search(board: Board): List[PiecesOnBoard] = {
     if (board.piecesLeft.isEmpty)
       board.piecesPut :: Nil
     else if (board.safeIndices.isEmpty)
       Nil
     else
-      board.withPieces.flatMap(search)
+      board.withPiece.flatMap(search)
+  }
 }

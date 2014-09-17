@@ -8,7 +8,7 @@ import chess.common.Domain._
 import scala.concurrent.Future
 
 object Solver {
-  case class Continue(solutions: List[List[(Int, Piece)]], frames: List[Board])
+  case class Continue(solutions: List[PiecesOnBoard], frames: List[Board])
 }
 
 class Solver(val domain: Domain) extends Actor {
@@ -16,8 +16,8 @@ class Solver(val domain: Domain) extends Actor {
   import context.dispatcher
   import Solver._
 
-  val MaxActiveFutures = System.getProperty("max.active.futures", "4").toInt
-  val BoardsPerFuture = System.getProperty("boards.per.future", "64").toInt
+  val MaxActiveFutures = System.getProperty("max.active.futures", "3").toInt
+  val BoardsPerFuture = System.getProperty("boards.per.future", "10000").toInt
 
   var solutions = List[List[(Int, Piece)]]()
   var stack = List[Board]()
@@ -43,7 +43,7 @@ class Solver(val domain: Domain) extends Actor {
     active += 1
     Future {
       val (solved, unsolved) = boards.partition(_.piecesLeft.isEmpty)
-      self ! Continue(solved.map(_.piecesPut), unsolved.flatMap(_.withPieces))
+      self ! Continue(solved.map(_.piecesPut), unsolved.flatMap(_.withPiece))
     }
   }
 }

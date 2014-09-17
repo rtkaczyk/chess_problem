@@ -7,6 +7,7 @@ object Domain {
 
   case class Dim(files: Int, ranks: Int) {
     val size = files * ranks
+    val initialIndices = 0.until(size).toList
   }
 
   sealed trait Piece {
@@ -41,55 +42,60 @@ object Domain {
     }
   }
 
-  val pieceOrder = King :: Queen :: Rook :: Bishop :: Knight :: Nil
-
-  class PieceSet(pieces: List[Int]) {
-    def pop: List[Piece] = {
-      val pcs = for ((n, p) <- pieces zip pieceOrder)
-      yield if (n > 0) Some(p) else None
-
-      pcs.flatten
-    }
-
-    val size = pieces.sum
-    val isEmpty = size == 0
-
-    def - (p: Piece): PieceSet = {
-      val i = pieceOrder.indexOf(p)
-      val n = pieces(i)
-      new PieceSet(pieces.updated(i, n - 1))
-    }
-  }
-
   type PiecesOnBoard = List[(Int, Piece)]
 
-  case class Board(piecesPut: PiecesOnBoard, piecesLeft: PieceSet, safeIndices: List[Int])(implicit dim: Dim) {
-    def withPieces: List[Board] = safeIndices match {
-      case Nil =>
-        Nil
+  case class Board(piecesPut: PiecesOnBoard, piecesLeft: List[Piece], safeIndices: List[Int])(implicit dim: Dim) {
 
-      case idx :: idxs =>
-        val sq = idx2sq(idx)
+    def withPiece: List[Board] = {
+      val (piece :: remPieces) = piecesLeft
 
-        val withPiece = piecesLeft.pop.flatMap { piece =>
-          if (piecesLeft.size > safeIndices.size)
-            Nil
-          else if (piecesPut.exists(pp => piece.attacks(sq, idx2sq(pp._1))))
-            Nil
+      def putPiece(acc: List[Board], remIdxs: List[Int]): List[Board] = remIdxs match {
+        case Nil =>
+          acc
+
+        case idx :: idxs =>
+          val sq = idx2sq(idx)
+          if (piecesPut.exists(pp => piece.attacks(sq, idx2sq(pp._1))))
+            putPiece(acc, idxs)
           else {
-            val remainingIdxs = idxs.filter(i => !piece.attacks(sq, idx2sq(i)))
-            Board((idx, piece) :: piecesPut, piecesLeft - piece, remainingIdxs) :: Nil
-          }
-        }
+            val nextIdxs =
+              (if (indicesFromTop.nonEmpty) indicesFromTop else idxs)
+                .filterNot(i => i == idx || piece.attacks(sq, idx2sq(i)))
 
-        if (idxs.isEmpty) withPiece else skipIndex :: withPiece
+            val newBoard = Board((idx, piece) :: piecesPut, remPieces, nextIdxs)
+            putPiece(newBoard :: acc, idxs)
+          }
+      }
+
+      putPiece(Nil, safeIndices)
     }
 
-    private def skipIndex: Board =
-      this.copy(safeIndices = safeIndices.tail)
+    private lazy val indicesFromTop: List[Int] = piecesLeft match {
+      case p1 :: p2 :: _ if p1 != p2 =>
+        dim.initialIndices.filterNot(idx => piecesPut.exists {
+          case (i, p) => idx == i || p.attacks(idx2sq(i), idx2sq(idx))
+        })
+      case _ => Nil
+    }
 
     private def idx2sq(idx: Int): Square =
       Square(idx / dim.ranks, idx % dim.ranks)
+
+    def repr: String = {
+      val pieceRepr = Map[Piece, String](King -> "K", Queen -> "Q", Rook -> "R", Bishop -> "B", Knight -> "N")
+      val pieces = piecesPut.toMap
+      val safe = safeIndices.toSet
+
+      val boardRepr =
+        (for (r <- 0 until dim.ranks) yield {
+          (for (f <- 0 until dim.files) yield {
+            val idx = f * dim.ranks + r
+            pieces.get(idx).map(pieceRepr).getOrElse(if (safe contains idx) "." else "-")
+          }).mkString(" ")
+        }).mkString("\n")
+
+      boardRepr + "\n"
+    }
   }
 }
 
@@ -100,8 +106,13 @@ case class Domain(files: Int, ranks: Int, kings: Int = 0, queens: Int = 0,
 
   implicit val dim = Dim(files, ranks)
 
-  val initialBoard = Board(
-    Nil,
-    new PieceSet(kings :: queens :: rooks :: bishops :: knights :: Nil),
-    0.until(files * ranks).toList)
+  val pieces = List (
+    Queen -> queens,
+    Rook -> rooks,
+    Bishop -> bishops,
+    King -> kings,
+    Knight -> knights
+  ).flatMap { case (p, n) => List.fill(n)(p)}
+
+  val initialBoard = Board(Nil, pieces, dim.initialIndices)
 }
