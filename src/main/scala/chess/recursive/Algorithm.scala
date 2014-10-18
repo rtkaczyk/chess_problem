@@ -18,6 +18,6 @@ class Algorithm(domain: Domain) {
     else if (board.safeIndices.isEmpty)
       Nil
     else
-      board.withPiece.flatMap(search)
+      board.withPieceI.flatMap(search)
   }
 }

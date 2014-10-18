@@ -23,15 +23,17 @@ class Solver(val domain: Domain) extends Actor {
   var stack = List[Board]()
   var active = 1
 
+  lazy val main = sender()
 
   def receive = {
     case Continue(ss, bs) =>
+      main
       solutions :::= ss
       stack :::= bs
       active -= 1
 
       if (active == 0 && stack.isEmpty) {
-        IO.output(solutions)
+        main ! solutions
         context.system.shutdown()
       } else
         fireFutures()
@@ -43,7 +45,7 @@ class Solver(val domain: Domain) extends Actor {
     active += 1
     Future {
       val (solved, unsolved) = boards.partition(_.piecesLeft.isEmpty)
-      self ! Continue(solved.map(_.piecesPut), unsolved.flatMap(_.withPiece))
+      self ! Continue(solved.map(_.piecesPut), unsolved.flatMap(_.withPieceI))
     }
   }
 }

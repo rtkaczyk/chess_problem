@@ -8,7 +8,13 @@ object IO {
     Domain(files, ranks, k, q, r , b, n)
   }
   
-  def output(solutions: Traversable[_]) {
-    println(solutions.size)
+  def output(solutions: => Traversable[_]) {
+    val (r, t) = timeIt(solutions)
+    println(s"Solutions: ${r.size} (time: $t ms)")
+  }
+
+  def timeIt[R](r: => R): (R, Long) = {
+    val t0 = System.currentTimeMillis
+    (r, System.currentTimeMillis - t0)
   }
 }

@@ -70,6 +70,27 @@ object Domain {
       putPiece(Nil, safeIndices)
     }
 
+    def withPieceI: List[Board] = {
+      var boards = List[Board]()
+      val piece :: remPieces = piecesLeft
+      var remIdxs = safeIndices
+
+      while(remIdxs.nonEmpty) {
+        val sq = idx2sq(remIdxs.head)
+        if(!piecesPut.exists(pp => piece.attacks(sq, idx2sq(pp._1)))) {
+          val nextIdxs =
+            (if (indicesFromTop.nonEmpty) indicesFromTop else remIdxs.tail)
+              .filterNot(i => i == remIdxs.head || piece.attacks(sq, idx2sq(i)))
+
+          val newBoard = Board((remIdxs.head, piece) :: piecesPut, remPieces, nextIdxs)
+          boards = newBoard :: boards
+        }
+        remIdxs = remIdxs.tail
+      }
+
+      boards
+    }
+
     private lazy val indicesFromTop: List[Int] = piecesLeft match {
       case p1 :: p2 :: _ if p1 != p2 =>
         dim.initialIndices.filterNot(idx => piecesPut.exists {
